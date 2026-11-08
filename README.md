@@ -7,11 +7,11 @@ Sistema de usuarios y tareas con .NET 10 Web API, Angular 21 y SQL Server.
 - `backend/TaskManager.Api`: Controllers → Service → Repository con Entity Framework Core.
 - `backend/TaskManager.Tests`: pruebas HTTP con persistencia sustituida por un repositorio en memoria.
 - `frontend`: Angular standalone, formularios reactivos, filtros y manejo de errores.
-- `database`: esquema, consultas JSON, datos opcionales y verificación transaccional.
+- `database`: esquema, consultas JSON, datos opcionales y verificación con limpieza de datos de prueba.
 
 ## Requisitos
 
-SDK .NET 10, Node.js compatible con Angular 21 (por ejemplo 20.19 o superior de la rama 20), npm y SQL Server 2016 o superior con compatibilidad 130+. Recomendado SQL Server 2022. Usar SSMS o sqlcmd para los scripts con separadores `GO`.
+SDK .NET 10, Node.js compatible con Angular 21 (por ejemplo 20.19 o superior de la rama 20), npm y SQL Server 2016 SP1 o superior con compatibilidad 130+. Recomendado SQL Server 2022. Los scripts se ejecutan completos desde SSMS, sqlcmd o un cliente SQL, sin separadores de lote ni transacciones explícitas.
 
 En el equipo de desarrollo se instaló el SDK sin modificar el PATH global, en `%LOCALAPPDATA%\fullstack-dotnet`. Si `dotnet` no se reconoce, agregarlo para la terminal actual:
 
@@ -26,7 +26,7 @@ Conectar con SQL Server en SSMS y ejecutar:
 1. `database/001_create.sql`: obligatorio; crea TaskManager, tablas, claves, índice, restricciones y trigger.
 2. `database/003_seed.sql`: opcional; usuario y tarea de ejemplo.
 3. `database/002_queries.sql`: ejemplos de consultas; ajustar variables según los datos.
-4. `database/004_verify.sql`: comprobaciones con rollback, sin conservar datos de prueba.
+4. `database/004_verify.sql`: comprobaciones con datos temporales que se eliminan explícitamente mediante DELETE, tanto al terminar como al capturar un error.
 
 Alternativa con autenticación Windows:
 
@@ -36,6 +36,8 @@ sqlcmd -S localhost -E -C -b -i database/003_seed.sql
 ```
 
 El script de creación se puede repetir, pero no constituye un sistema de migraciones. La API no crea el esquema automáticamente.
+
+La creación de tablas se ejecuta en el contexto de TaskManager mediante `sp_executesql`; el trigger utiliza otra llamada para cumplir la exigencia de SQL Server de que su definición sea la primera sentencia de un lote. Cada sentencia confirma sus cambios de forma independiente. Si la ejecución se interrumpe, pueden quedar cambios parciales o datos de verificación; corregir la causa y repetir la creación, o limpiar las filas de prueba identificadas por su usuario. Ejecutar las verificaciones solo en desarrollo.
 
 ## Backend
 
@@ -107,7 +109,7 @@ Errores: 400 para datos inválidos o usuario inexistente, 404 para tarea inexist
 - DTOs separados de entidades, consultas parametrizadas por EF y lecturas sin tracking.
 - SQL genera fechas UTC; la API conserva la zona UTC y Angular muestra la hora del navegador.
 - Claves primarias, FK y restricciones SQL. Índice compuesto `(UserId, Status, CreatedAt)` para consultas por responsable y estado.
-- `AdditionalData NVARCHAR(MAX)` con `CHECK ISJSON(...) = 1`. Los ejemplos muestran JSON_VALUE, JSON_QUERY, OPENJSON, filtro por prioridad y JSON_MODIFY dentro de una transacción con rollback.
+- `AdditionalData NVARCHAR(MAX)` con `CHECK ISJSON(...) = 1`. Los ejemplos muestran JSON_VALUE, JSON_QUERY, OPENJSON, filtro por prioridad y una vista previa con JSON_MODIFY mediante SELECT que no altera los datos almacenados.
 - Metadatos libres: prioridad, etiquetas y fecha estimada no agregan reglas obligatorias al dominio.
 - Angular cancela consultas anteriores al cambiar filtros, valida formularios y muestra errores y estados de carga.
 

@@ -1,5 +1,4 @@
 USE TaskManager;
-GO
 DECLARE @UserId INT = 1, @Status VARCHAR(20) = 'Pending', @Priority NVARCHAR(20) = N'High';
 -- Required query: assigned user + optional status + creation date ordering.
 SELECT t.Id, t.Title, u.Name AS UserName, t.Status, t.CreatedAt,
@@ -15,9 +14,8 @@ WHERE ISJSON(AdditionalData) = 1 AND JSON_VALUE(AdditionalData, '$.priority') = 
 -- Expand array elements using OPENJSON.
 SELECT t.Id, t.Title, tag.[value] AS Tag
 FROM dbo.Tasks t CROSS APPLY OPENJSON(t.AdditionalData, '$.tags') tag;
--- Optional JSON_MODIFY example; rolled back to keep this sample read-only in effect.
-BEGIN TRANSACTION;
-UPDATE dbo.Tasks SET AdditionalData = JSON_MODIFY(AdditionalData, '$.priority', N'High') WHERE Id = 1;
-SELECT Id, AdditionalData FROM dbo.Tasks WHERE Id = 1;
-ROLLBACK;
-GO
+-- Preview a modified JSON value without changing stored data.
+SELECT Id, AdditionalData AS OriginalData,
+       JSON_MODIFY(AdditionalData, '$.priority', N'High') AS ModifiedData
+FROM dbo.Tasks
+WHERE Id = 1;
