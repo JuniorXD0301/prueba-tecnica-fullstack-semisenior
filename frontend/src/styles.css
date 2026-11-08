@@ -1,0 +1,79 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;600;700;800&display=swap');
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: #f6f7f9;
+  color: #182333;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+}
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+button {
+  cursor: pointer;
+}
+button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+a {
+  color: inherit;
+}
+input,
+select,
+textarea {
+  width: 100%;
+  border: 1px solid #dce1e7;
+  border-radius: 8px;
+  background: white;
+  padding: 11px;
+  color: #263247;
+  min-width: 0;
+}
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 2px solid #a8c9bd;
+  outline-offset: 1px;
+}
+button:focus-visible,
+summary:focus-visible {
+  outline: 3px solid #62a990;
+  outline-offset: 3px;
+}
+label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #546170;
+}
+label input,
+label select,
+label textarea {
+  display: block;
+  margin-top: 7px;
+}
+label span {
+  color: #b84343;
+}
+h1,
+h2,
+h3 {
+  font-family: 'Manrope', sans-serif;
+}
+h2 {
+  font-size: 17px;
+  margin: 0 0 18px;
+}
+h3 {
+  font-size: 16px;
+}
+p {
+  line-height: 1.6;
+}

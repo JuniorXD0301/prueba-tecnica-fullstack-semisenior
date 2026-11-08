@@ -1,0 +1,212 @@
+<div class="shell">
+  <header>
+    <a class="brand" href="/" aria-label="Inicio de TaskFlow"
+      ><span class="logo">✓</span> TaskFlow</a
+    ><span class="workspace">ESPACIO DE TRABAJO / EQUIPO</span>
+  </header>
+  <main>
+    <section class="heading">
+      <div>
+        <p class="eyebrow">ORGANIZA. ASIGNA. AVANZA.</p>
+        <h1>El trabajo, en movimiento.</h1>
+        <p>Un lugar para las tareas de tu equipo y sus próximos pasos.</p>
+      </div>
+      <button class="secondary" (click)="loadUsers(); refresh()" [disabled]="loading()">
+        ↻ Actualizar
+      </button>
+    </section>
+    @if (error()) {
+      <div class="alert error" role="alert">{{ error() }}</div>
+    }
+    @if (notice()) {
+      <div class="alert success" role="status">{{ notice() }}</div>
+    }
+    <div class="layout">
+      <section class="board" aria-labelledby="tasks-title">
+        <div class="section-title">
+          <h2 id="tasks-title">Tareas del equipo</h2>
+          <span class="count">{{ tasks().length }}</span>
+        </div>
+        <div class="filters">
+          <label
+            >Estado<select #statusFilter (change)="filterStatus(statusFilter.value)">
+              <option value="">Todos los estados</option>
+              @for (s of statuses; track s) {
+                <option [value]="s">{{ labels[s] }}</option>
+              }
+            </select></label
+          >
+          <label
+            >Responsable<select #userFilter (change)="filterUser(userFilter.value)">
+              <option value="">Todo el equipo</option>
+              @for (u of users(); track u.id) {
+                <option [value]="u.id">{{ u.name }}</option>
+              }
+            </select></label
+          >
+        </div>
+        @if (loading()) {
+          <p class="empty" role="status">Cargando tareas…</p>
+        } @else if (!tasks().length) {
+          <div class="empty">
+            <span class="empty-icon">✓</span>
+            <h3>{{ error() ? 'No pudimos cargar las tareas' : 'Todo listo para empezar' }}</h3>
+            <p>
+              {{
+                error()
+                  ? 'Revisa la conexión y vuelve a actualizar.'
+                  : 'Crea una tarea o cambia los filtros para ver más resultados.'
+              }}
+            </p>
+          </div>
+        } @else {
+          <div class="task-list">
+            @for (task of tasks(); track task.id) {
+              <article class="task">
+                <div class="task-top">
+                  <span class="badge" [attr.data-status]="task.status">{{
+                    labels[task.status]
+                  }}</span
+                  ><span class="task-id">#{{ task.id }}</span>
+                </div>
+                <h3>{{ task.title }}</h3>
+                <div class="task-meta">
+                  <span>↳ {{ task.userName }}</span
+                  ><time [attr.datetime]="task.createdAt">{{
+                    task.createdAt | date: 'dd MMM yyyy, HH:mm'
+                  }}</time>
+                </div>
+                @if (task.additionalData['priority']) {
+                  <p class="extra">Prioridad: {{ task.additionalData['priority'] }}</p>
+                }
+                @if (task.additionalData['estimatedCompletion']) {
+                  <p class="extra">
+                    Fecha estimada: {{ task.additionalData['estimatedCompletion'] }}
+                  </p>
+                }
+                @if (task.additionalData['tags']; as tags) {
+                  <p class="extra">Etiquetas: {{ tags }}</p>
+                }
+                <label class="status-control"
+                  >Cambiar estado<select
+                    #nextStatus
+                    [value]="task.status"
+                    [disabled]="updating().includes(task.id)"
+                    (change)="changeStatus(task, nextStatus.value); nextStatus.value = task.status"
+                  >
+                    @for (s of statuses; track s) {
+                      <option [value]="s" [disabled]="task.status === 'Pending' && s === 'Done'">
+                        {{ labels[s] }}
+                      </option>
+                    }
+                  </select></label
+                >
+              </article>
+            }
+          </div>
+        }
+        <p class="hint">Las tareas pendientes deben pasar por «En progreso» antes de terminarse.</p>
+      </section>
+      <aside>
+        <section class="panel">
+          <p class="eyebrow">EL SIGUIENTE PASO</p>
+          <h2>Nueva tarea</h2>
+          @if (!users().length) {
+            <p class="hint">Primero crea un usuario para asignarle la tarea.</p>
+          }
+          <form [formGroup]="taskForm" (ngSubmit)="createTask()">
+            <label
+              >Título <span>*</span
+              ><input
+                formControlName="title"
+                maxlength="200"
+                placeholder="¿Qué hay que hacer?"
+                required
+            /></label>
+            @if (taskForm.controls.title.touched && taskForm.controls.title.invalid) {
+              <small class="field-error">Escribe un título de hasta 200 caracteres.</small>
+            }
+            <label
+              >Responsable <span>*</span
+              ><select formControlName="userId" required>
+                <option value="">Selecciona una persona</option>
+                @for (u of users(); track u.id) {
+                  <option [value]="u.id">{{ u.name }}</option>
+                }
+              </select></label
+            >
+            @if (taskForm.controls.userId.touched && taskForm.controls.userId.invalid) {
+              <small class="field-error">Selecciona un responsable.</small>
+            }
+            <div class="form-row">
+              <label
+                >Prioridad<select formControlName="priority">
+                  <option value="Low">Baja</option>
+                  <option value="Medium">Media</option>
+                  <option value="High">Alta</option>
+                </select></label
+              ><label
+                >Fecha estimada<input type="date" formControlName="estimatedCompletion"
+              /></label>
+            </div>
+            <label
+              >Etiquetas<input formControlName="tags" placeholder="diseño, entrega, equipo"
+            /></label>
+            <details>
+              <summary>Metadatos adicionales (JSON)</summary>
+              <label
+                >Objeto JSON<textarea
+                  formControlName="metadata"
+                  rows="3"
+                  spellcheck="false"
+                ></textarea>
+              </label>
+            </details>
+            <button class="primary" type="submit" [disabled]="savingTask() || !users().length">
+              {{ savingTask() ? 'Creando…' : '+ Crear tarea' }}
+            </button>
+          </form>
+        </section>
+        <section class="panel">
+          <h2>
+            Personas del equipo <span class="count">{{ users().length }}</span>
+          </h2>
+          <ul class="people">
+            @for (u of users(); track u.id) {
+              <li>
+                <span class="avatar">{{ u.name.charAt(0).toUpperCase() }}</span>
+                <div>
+                  <strong>{{ u.name }}</strong
+                  ><small>{{ u.email }}</small>
+                </div>
+              </li>
+            } @empty {
+              <li class="hint">Aún no hay personas registradas.</li>
+            }
+          </ul>
+          <form [formGroup]="userForm" (ngSubmit)="createUser()">
+            <label
+              >Nombre <span>*</span
+              ><input formControlName="name" maxlength="120" autocomplete="name" required /></label
+            ><label
+              >Correo electrónico <span>*</span
+              ><input
+                type="email"
+                formControlName="email"
+                maxlength="254"
+                autocomplete="email"
+                required
+            /></label>
+            @if (userForm.touched && userForm.invalid) {
+              <small class="field-error">Ingresa un nombre y un correo electrónico válido.</small>
+            }
+            <button class="secondary full" type="submit" [disabled]="savingUser()">
+              {{ savingUser() ? 'Guardando…' : '+ Agregar persona' }}
+            </button>
+          </form>
+        </section>
+      </aside>
+    </div>
+  </main>
+  <footer>TaskFlow <span>Un paso a la vez. Todo el equipo en la misma dirección.</span></footer>
+</div>
