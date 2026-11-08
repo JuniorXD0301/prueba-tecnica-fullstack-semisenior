@@ -1,0 +1,8 @@
+**/node_modules/
+**/bin/
+**/obj/
+**/dist/
+**/.angular/
+.env
+**/appsettings.Local.json
+.vs/
