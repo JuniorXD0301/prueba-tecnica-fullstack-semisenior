@@ -1,0 +1,90 @@
+:host {
+  display: block;
+  pointer-events: auto;
+}
+
+.message {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid #b9ddc9;
+  border-left: 4px solid #22775b;
+  border-radius: 10px;
+  background: #f0faf4;
+  color: #19573f;
+  box-shadow: 0 8px 30px #18233324;
+  animation: appear 180ms ease-out;
+}
+
+.message-icon {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.message[data-severity='warning'] {
+  border-color: #ebd29e;
+  border-left-color: #a36a0c;
+  background: #fff8e8;
+  color: #80510b;
+}
+
+.message[data-severity='error'] {
+  border-color: #efbcb8;
+  border-left-color: #b33d35;
+  background: #fff1f0;
+  color: #96372f;
+}
+
+svg {
+  display: block;
+  width: 22px;
+  height: 22px;
+}
+
+.message-content {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+strong {
+  font-size: 13px;
+}
+
+p {
+  margin: 5px 0 0;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.message-close {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  padding: 3px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: inherit;
+}
+
+.message-close:hover {
+  background: #1823330d;
+}
+
+.message-close:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+@keyframes appear {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .message { animation: none; }
+}
