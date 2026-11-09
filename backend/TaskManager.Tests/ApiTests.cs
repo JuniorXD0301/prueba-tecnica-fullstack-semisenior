@@ -48,6 +48,9 @@ public class ApiTests
     {
         using var factory = new TestApi(); using var client = factory.CreateClient();
         Assert.Equal(HttpStatusCode.BadRequest, (await client.PostAsJsonAsync("/api/users", new { name = "Ana", email = "bad" })).StatusCode);
+        var incompleteDomain = await client.PostAsJsonAsync(
+            "/api/users", new { name = "Ana", email = "ana@l" });
+        Assert.Equal(HttpStatusCode.BadRequest, incompleteDomain.StatusCode);
         await client.PostAsJsonAsync("/api/users", new { name = "Ana", email = "ana@example.com" });
         Assert.Equal(HttpStatusCode.BadRequest, (await client.PostAsJsonAsync("/api/tasks", new { title = "Task", userId = 1, additionalData = new[] { "invalid" } })).StatusCode);
     }

@@ -15,18 +15,24 @@
         ↻ Actualizar
       </button>
     </section>
-    @if (error()) {
-      <div class="alert error" role="alert">{{ error() }}</div>
-    }
-    @if (notice()) {
-      <div class="alert success" role="status">{{ notice() }}</div>
-    }
+    <div class="notifications" role="region" aria-label="Notificaciones">
+      @if (error()) {
+        <app-message severity="error" [text]="error()" (dismissed)="error.set('')" />
+      }
+      @if (warning()) {
+        <app-message severity="warning" [text]="warning()" (dismissed)="warning.set('')" />
+      }
+      @if (notice()) {
+        <app-message [text]="notice()" (dismissed)="notice.set('')" />
+      }
+    </div>
     <div class="layout">
       <section class="board" aria-labelledby="tasks-title">
         <div class="section-title">
           <h2 id="tasks-title">Tareas del equipo</h2>
           <span class="count">{{ tasks().length }}</span>
         </div>
+        <p class="hint board-hint">Las tareas pendientes deben pasar por «En progreso» antes de terminarse.</p>
         <div class="filters">
           <label
             >Estado<select #statusFilter (change)="filterStatus(statusFilter.value)">
@@ -44,6 +50,13 @@
               }
             </select></label
           >
+          <label>
+            Orden por fecha
+            <select #dateOrder (change)="oldestFirst.set(dateOrder.value === 'oldest')">
+              <option value="newest">Más recientes</option>
+              <option value="oldest">Más antiguas</option>
+            </select>
+          </label>
         </div>
         @if (loading()) {
           <p class="empty" role="status">Cargando tareas…</p>
@@ -61,13 +74,27 @@
           </div>
         } @else {
           <div class="task-list">
-            @for (task of tasks(); track task.id) {
+            @for (task of orderedTasks(); track task.id) {
               <article class="task">
                 <div class="task-top">
-                  <span class="badge" [attr.data-status]="task.status">{{
-                    labels[task.status]
-                  }}</span
-                  ><span class="task-id">#{{ task.id }}</span>
+                  <span class="badge" [attr.data-status]="task.status">{{ labels[task.status] }}</span>
+                  <div class="task-indicators">
+                    @if (priorityLabel(task.additionalData['priority']); as priority) {
+                      <span
+                        class="priority-flag"
+                        [attr.data-priority]="task.additionalData['priority']"
+                        role="img"
+                        [attr.aria-label]="'Prioridad: ' + priority"
+                        [title]="'Prioridad: ' + priority"
+                      >
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                          <path d="M5 3v18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                          <path d="M6 4h14l-4 5 4 5H6z" fill="currentColor" />
+                        </svg>
+                      </span>
+                    }
+                    <span class="task-id">#{{ task.id }}</span>
+                  </div>
                 </div>
                 <h3>{{ task.title }}</h3>
                 <div class="task-meta">
@@ -76,9 +103,6 @@
                     task.createdAt | date: 'dd MMM yyyy, HH:mm'
                   }}</time>
                 </div>
-                @if (task.additionalData['priority']) {
-                  <p class="extra">Prioridad: {{ task.additionalData['priority'] }}</p>
-                }
                 @if (task.additionalData['estimatedCompletion']) {
                   <p class="extra">
                     Fecha estimada: {{ task.additionalData['estimatedCompletion'] }}
@@ -90,12 +114,15 @@
                 <label class="status-control"
                   >Cambiar estado<select
                     #nextStatus
-                    [value]="task.status"
                     [disabled]="updating().includes(task.id)"
                     (change)="changeStatus(task, nextStatus.value); nextStatus.value = task.status"
                   >
                     @for (s of statuses; track s) {
-                      <option [value]="s" [disabled]="task.status === 'Pending' && s === 'Done'">
+                      <option
+                        [value]="s"
+                        [selected]="s === task.status"
+                        [disabled]="task.status === 'Pending' && s === 'Done'"
+                      >
                         {{ labels[s] }}
                       </option>
                     }
@@ -105,7 +132,6 @@
             }
           </div>
         }
-        <p class="hint">Las tareas pendientes deben pasar por «En progreso» antes de terminarse.</p>
       </section>
       <aside>
         <section class="panel">
@@ -198,7 +224,7 @@
                 required
             /></label>
             @if (userForm.touched && userForm.invalid) {
-              <small class="field-error">Ingresa un nombre y un correo electrónico válido.</small>
+              <small class="field-error">Ingresa un nombre y un correo como nombre@ejemplo.com.</small>
             }
             <button class="secondary full" type="submit" [disabled]="savingUser()">
               {{ savingUser() ? 'Guardando…' : '+ Agregar persona' }}
