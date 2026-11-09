@@ -11,10 +11,10 @@ Esta guía usa Windows, PowerShell y DBeaver. Instala estos componentes si todav
 - **Motor de SQL Server** 2016 o superior con nivel de compatibilidad 130 o mayor. Puedes usar la edición Express o Developer para desarrollo local. [Descargar SQL Server](https://www.microsoft.com/en-us/sql-server/sql-server-downloads).
 - **DBeaver** para conectarte al motor y ejecutar los archivos SQL. [Descargar DBeaver](https://dbeaver.io/download/).
 
-Abre en VS Code la carpeta que contiene este README, `backend`, `database` y `frontend`. Si aún no tienes el código, clona la rama de desarrollo con Git y abre la carpeta resultante.
+Abre en VS Code la carpeta que contiene este README, `backend`, `database` y `frontend`. Si aún no tienes el código, clona el repositorio con Git y abre la carpeta resultante. Git descargará `main`, la rama principal.
 
 ```powershell
-git clone --branch desarrollo https://github.com/JuniorXD0301/prueba-tecnica-fullstack-semisenior.git
+git clone https://github.com/JuniorXD0301/prueba-tecnica-fullstack-semisenior.git
 cd prueba-tecnica-fullstack-semisenior
 ```
 
